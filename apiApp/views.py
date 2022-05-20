@@ -1,4 +1,4 @@
-#-----------------------django modules------------------
+#-----------------------django modules-----------------------------------------------------------
 from pydoc import doc
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -7,7 +7,7 @@ from django.db.models import Avg
 from django.db.models import CharField, Value as V
 from django.db.models.functions import Concat
 
-#------------------------imported modules---------------
+#------------------------imported modules--------------------------------------------------------
 from numpy import negative
 import pandas as pd
 import numpy as  np
@@ -17,11 +17,11 @@ from dateutil import rrule
 import random
 from operator import itemgetter
 
-#----------------------------models------------------------
+#----------------------------models--------------------------------------------------------------
 from apiApp.models import everside_clinic, everside_nps
-#-------------------------Serializers------------------------
+#-------------------------Serializers------------------------------------------------------------
 from apiApp.serializers import eversideAlertComments, eversideComments
-#----------------------------restAPI------------------------
+#----------------------------restAPI--------------------------------------------------------------
 from rest_framework.decorators import parser_classes
 from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework.decorators import api_view
@@ -29,7 +29,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import parser_classes
 from rest_framework.parsers import MultiPartParser,FormParser
 
-#---------------------Engagement Score Function
+#---------------------Engagement Score Function---------------------------------------------------
 from apiApp.prob_func import func
 
 
@@ -38,6 +38,10 @@ from apiApp.prob_func import func
 # Create your views here.
 #Blog.objects.filter(pk__in=[1, 4, 7])
 #---------------------------------------filter-----------------------------------------------------
+
+
+
+
 @api_view(['GET'])
 def filterRegion(request,format=None):
     try:
@@ -55,19 +59,23 @@ def filterRegion(request,format=None):
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400            
             region = []
             obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('city','state').distinct()
+            # clinic = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('clinic',flat=True).distinct()
+            
             for i in obj:
                 region_name = str(i[0])+','+str(i[1])
                 region.append(region_name)
-                region.sort()
-            region.insert(0, 'All')
-            return Response({'Message':'TRUE','region':region,})
+            region.sort()
+            # clinic_list = list(clinic)
+            # clinic_list.sort()
+        return Response({'Message':'TRUE','region':region})
     except:
         return Response({'Message':'FALSE'})
 
 
+
 @api_view(['GET'])
 def filterClinic(request,format=None):
-    # try:
+    try:
         if request.method == 'GET':
             start_year = request.GET.get('start_year')
             start_month = request.GET.get('start_month')
@@ -81,25 +89,24 @@ def filterClinic(request,format=None):
             else:
                 end_date = str('1-')+str(int(end_year)+1)
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400   
-            # print("region => ",region)
-            if('All' in region.split('-')):
-                obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('clinic',flat=True).distinct()    
-            else:
+            obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('clinic',flat=True).distinct()    
+            if('' not in region.split('-')):
                 city = []
                 state = []
                 for i in region.split('-'):
-                    # print(i)
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
                 obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(city__in=city).filter(state__in=state).values_list('clinic',flat=True).distinct()
             data = list(obj)
-            data.insert(0, 'All')
-            return Response({'Message':'TRUE','clinic':data,})
+            data.sort()
+        return Response({'Message':'TRUE','clinic':data,})
+    except:
+        return Response({'Message':'FALSE'})        
 
 
 
 
-#--------------------------------------API Functions-----------------------------------------------
+#--------------------------------------API Functions---------------------------------------------
 
 @api_view(['POST'])
 def userLogin(request,format=None):
@@ -109,8 +116,13 @@ def userLogin(request,format=None):
             username = str(data['username'])
             password = str(data['password'])
         
-            if username == 'everside_user' or username == 'user@everside.com' or username=='a':
-                if password == 'Test@1234' or password=='a':
+            if username == 'everside_user' or username == 'user@everside.com':
+                if password == 'Test@1234':
+                    return Response({'Message':'TRUE'})
+                else:
+                    return Response({'Message':'FALSE'})
+            elif username=='a':
+                if password=='a':
                     return Response({'Message':'TRUE'})
                 else:
                     return Response({'Message':'FALSE'})
@@ -120,7 +132,7 @@ def userLogin(request,format=None):
             return Response({'Message':'FALSE'})
             
 
-#---------------------------Dashboard Api's-------------------------------------------------------------
+#---------------------------Dashboard Api's------------------------------------------------------
 
 @api_view(['GET'])
 def netPromoterScore(request,format=None):
@@ -131,7 +143,7 @@ def netPromoterScore(request,format=None):
             end_year = request.GET.get('end_year')
             end_month = request.GET.get('end_month')
             region = (request.GET.get('region')).split('-')
-            clinic = (request.GET.get('clinic')).split('-')            
+            clinic = (request.GET.get('clinic')).split('-')        
             start_date = str(start_month)+'-'+str(start_year)
             startDate = (time.mktime(datetime.datetime.strptime(start_date,"%m-%Y").timetuple()))
             if int(end_month)<12:
@@ -145,7 +157,7 @@ def netPromoterScore(request,format=None):
             detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(nps_label = 'Detractor').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -154,7 +166,7 @@ def netPromoterScore(request,format=None):
                 passive_count = passive_count.filter(state__in = state).filter(city__in = city)
                 detractors_count = detractors_count.filter(state__in = state).filter(city__in = city)
             
-            if clinic[0]!='All':
+            if '' not in clinic:
                 total_count = total_count.filter(clinic__in = clinic)
                 promoters_count = promoters_count.filter(clinic__in = clinic)
                 passive_count = passive_count.filter(clinic__in = clinic)
@@ -209,8 +221,8 @@ def netPromoterScore(request,format=None):
 
 @api_view(['GET'])
 def netSentimentScore(request,format=None):
-    if request.method == 'GET':
-        try:
+    try:
+        if request.method == 'GET':
             start_year = request.GET.get('start_year')
             start_month = request.GET.get('start_month')
             end_year = request.GET.get('end_year')
@@ -230,7 +242,7 @@ def netSentimentScore(request,format=None):
             extreme_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -239,7 +251,7 @@ def netSentimentScore(request,format=None):
                 negative_count = negative_count.filter(state__in = state).filter(city__in = city)
                 extreme_count = extreme_count.filter(state__in = state).filter(city__in = city)
             
-            if clinic[0]!='All':
+            if '' not in clinic:
                 total_count = total_count.filter(clinic__in = clinic)
                 positive_count = positive_count.filter(clinic__in = clinic)
                 negative_count = negative_count.filter(clinic__in = clinic)
@@ -285,8 +297,8 @@ def netSentimentScore(request,format=None):
             return Response({'Message':'TRUE',
                              'nss':nss,
                              'nss_pie':nss_pie})
-        except:
-            return Response({'Message':'FALSE'})
+    except:
+        return Response({'Message':'FALSE'})
 
 @api_view(['GET'])
 def npsOverTime(request,format=None):
@@ -317,7 +329,7 @@ def npsOverTime(request,format=None):
                 detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(nps_label = 'Detractor').values()
                 city = []
                 state = []
-                if region[0]!='All':
+                if '' not in region:
                     for i in region:
                         city.append(i.split(',')[0])
                         state.append(i.split(',')[1])
@@ -326,7 +338,7 @@ def npsOverTime(request,format=None):
                     passive_count = passive_count.filter(state__in = state).filter(city__in = city)
                     detractors_count = detractors_count.filter(state__in = state).filter(city__in = city)
             
-                if clinic[0]!='All':
+                if '' not in clinic:
                     total_count = total_count.filter(clinic__in = clinic)
                     promoters_count = promoters_count.filter(clinic__in = clinic)
                     passive_count = passive_count.filter(clinic__in = clinic)
@@ -398,7 +410,7 @@ def nssOverTime(request,format=None):
                 extreme_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label = 'Extreme').values()
                 city = []
                 state = []
-                if region[0]!='All':
+                if '' not in region:
                     for i in region:
                         city.append(i.split(',')[0])
                         state.append(i.split(',')[1])
@@ -408,7 +420,7 @@ def nssOverTime(request,format=None):
                     neutral_count = neutral_count.filter(state__in = state).filter(city__in = city)
                     extreme_count = extreme_count.filter(state__in = state).filter(city__in = city)
                 
-                if clinic[0]!='All':
+                if '' not in clinic:
                     total_count = total_count.filter(clinic__in = clinic)
                     positive_count = positive_count.filter(clinic__in = clinic)
                     negative_count = negative_count.filter(clinic__in = clinic)
@@ -475,14 +487,14 @@ def npsVsSentiments(request,format=None):
             else:
                 end_date = str('1-')+str(int(end_year)+1)
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400
-            #-------------Extreme---------------------------------
+            #-------------Extreme----------------------------------------------------------------
             extreme_total_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').values()
             extreme_promoters_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').filter(nps_label='Promoter').values()
             extreme_passive_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').filter(nps_label='Passive').values()
             extreme_detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').filter(nps_label='Detractor').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -491,7 +503,7 @@ def npsVsSentiments(request,format=None):
                 extreme_passive_count = extreme_passive_count.filter(state__in = state).filter(city__in = city)
                 extreme_detractors_count = extreme_detractors_count.filter(state__in = state).filter(city__in = city)
             
-            if clinic[0]!='All':
+            if '' not in clinic:
                 extreme_total_count = extreme_total_count.filter(clinic__in = clinic)
                 extreme_promoters_count = extreme_promoters_count.filter(clinic__in = clinic)
                 extreme_passive_count = extreme_passive_count.filter(clinic__in = clinic)
@@ -522,14 +534,14 @@ def npsVsSentiments(request,format=None):
                     'passive':extreme_passive,
                     'detractor':extreme_detractors,
                 }
-            #-------------Positive---------------------------------
+            #-------------Positive---------------------------------------------------------------
             positive_total_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Positive').values()
             positive_promoters_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Positive').filter(nps_label='Promoter').values()
             positive_passive_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Positive').filter(nps_label='Passive').values()
             positive_detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Positive').filter(nps_label='Detractor').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -538,7 +550,7 @@ def npsVsSentiments(request,format=None):
                 positive_passive_count = positive_passive_count.filter(state__in = state).filter(city__in = city)
                 positive_detractors_count = positive_detractors_count.filter(state__in = state).filter(city__in = city)
             
-            if clinic[0]!='All':
+            if '' not in clinic:
                 positive_total_count = positive_total_count.filter(clinic__in = clinic)
                 positive_promoters_count = positive_promoters_count.filter(clinic__in = clinic)
                 positive_passive_count = positive_passive_count.filter(clinic__in = clinic)
@@ -569,14 +581,14 @@ def npsVsSentiments(request,format=None):
                     'passive':positive_passive,
                     'detractor':positive_detractors,
                 }
-            #-------------Negative---------------------------------
+            #-------------Negative---------------------------------------------------------------
             negative_total_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Negative').values()
             negative_promoters_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Negative').filter(nps_label='Promoter').values()
             negative_passive_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Negative').filter(nps_label='Passive').values()
             negative_detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Negative').filter(nps_label='Detractor').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -585,7 +597,7 @@ def npsVsSentiments(request,format=None):
                 negative_passive_count = negative_passive_count.filter(state__in = state).filter(city__in = city)
                 negative_detractors_count = negative_detractors_count.filter(state__in = state).filter(city__in = city)
             
-            if clinic[0]!='All':
+            if '' not in clinic:
                 negative_total_count = negative_total_count.filter(clinic__in = clinic)
                 negative_promoters_count = negative_promoters_count.filter(clinic__in = clinic)
                 negative_passive_count = negative_passive_count.filter(clinic__in = clinic)
@@ -616,14 +628,14 @@ def npsVsSentiments(request,format=None):
                     'passive':negative_passive,
                     'detractor':negative_detractors,
                 }
-            #-------------Neutral---------------------------------
+            #-------------Neutral----------------------------------------------------------------
             neutral_total_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Neutral').values()
             neutral_promoters_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Neutral').filter(nps_label='Promoter').values()
             neutral_passive_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Neutral').filter(nps_label='Passive').values()
             neutral_detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Neutral').filter(nps_label='Detractor').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region[0]:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -632,7 +644,7 @@ def npsVsSentiments(request,format=None):
                 neutral_passive_count = neutral_passive_count.filter(state__in = state).filter(city__in = city)
                 neutral_detractors_count = neutral_detractors_count.filter(state__in = state).filter(city__in = city)
             
-            if clinic[0]!='All':
+            if '' not in clinic:
                 neutral_total_count = neutral_total_count.filter(clinic__in = clinic)
                 neutral_promoters_count = neutral_promoters_count.filter(clinic__in = clinic)
                 neutral_passive_count = neutral_passive_count.filter(clinic__in = clinic)
@@ -688,12 +700,12 @@ def alertComments(request,format=None):
             alert_comments = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').order_by('-timestamp').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
                 alert_comments = alert_comments.filter(state__in = state).filter(city__in = city)
-            if clinic[0]!='All':
+            if '' not in clinic:
                 alert_comments = alert_comments.filter(clinic__in = clinic)
             serialized_alert_comments = eversideAlertComments(alert_comments,many=True)
         return Response({'Message':'TRUE','data':serialized_alert_comments.data})
@@ -724,7 +736,7 @@ def topComments(request,format=None):
             extreme = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').order_by('?').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -733,7 +745,7 @@ def topComments(request,format=None):
                 neutral = neutral.filter(state__in = state).filter(city__in = city)
                 extreme = extreme.filter(state__in = state).filter(city__in = city)
 
-            if clinic[0]!='All':
+            if '' not in clinic:
                 positive = positive.filter(clinic__in = clinic)
                 negative = negative.filter(clinic__in = clinic)
                 neutral = neutral.filter(clinic__in = clinic)
@@ -765,12 +777,12 @@ def totalComments(request,format=None):
             all_comments = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).order_by('-timestamp').values()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
                 all_comments = all_comments.filter(state__in = state).filter(city__in = city)
-            if clinic[0]!='All':
+            if '' not in clinic:
                 all_comments = all_comments.filter(clinic__in = clinic)
             serialized_all_comments = eversideComments(all_comments,many=True)
         return Response({'Message':'TRUE','data':serialized_all_comments.data})
@@ -797,12 +809,12 @@ def clinicData(request,format=None):
             clinic_list = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('clinic','city','state').distinct()
             city = []
             state = []
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
                 clinic_list = clinic_list.filter(state__in = state).filter(city__in = city)
-            if clinic[0]!='All':
+            if '' not in clinic:
                 clinic_list = clinic_list.filter(clinic__in = clinic)
             clinic_data = []
             for i in list(clinic_list):
@@ -843,8 +855,7 @@ def totalCards(request,format=None):
             clients = 956
             city = []
             state = []
-            print(len(alerts))
-            if region[0]!='All':
+            if '' not in region:
                 for i in region:
                     city.append(i.split(',')[0])
                     state.append(i.split(',')[1])
@@ -853,12 +864,15 @@ def totalCards(request,format=None):
                 alerts = alerts.filter(state__in = state).filter(city__in = city)
                 clinics = clinics.filter(state__in = state).filter(city__in = city)
 
-            if clinic[0]!='All':
+            if '' not in clinic:
                 comments = comments.filter(clinic__in = clinic)
                 survey = survey.filter(clinic__in = clinic)
                 alerts = alerts.filter(clinic__in = clinic)
                 clinics = clinics.filter(clinic__in = clinic)
-
+            comments = comments 
+            survey = survey
+            alerts = alerts
+            clinics = clinics
             card_data = {
                             'survey':len(survey),
                             'comments': len(comments),
@@ -871,7 +885,7 @@ def totalCards(request,format=None):
     except:
         return Response({'Message':'FALSE'})     
 
-#---------------------------Engagement Score Api---------------------------------------
+#---------------------------Engagement Score Api-------------------------------------------------
 @api_view(['POST'])
 @parser_classes([MultiPartParser,FormParser])
 def egStatistics(request,format=None):
@@ -879,7 +893,6 @@ def egStatistics(request,format=None):
         up_file = request.FILES.getlist('file')
 
         df = pd.read_csv(up_file[0])
-        # print(df.shape)
         if 'CLIENT_ID' in list(df.columns) and "MEMBER_ID" in list(df.columns) and 'ZIP' in df.columns and 'HOUSEHOLD_ID' in list(df.columns):
             mes = 'TRUE'
 
@@ -934,6 +947,3 @@ def egPercentileMember(request,format=None):
 
     except:
         return Response({'Message':"FALSE"})
-
-            
-

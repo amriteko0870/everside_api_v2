@@ -2,6 +2,10 @@ from django.db import models
 
 # Create your models here.
 
+# class userData(models.Model):
+#     username = models.CharField(max_length=100)
+#     passowrd = models.CharField(max_length=200)
+
 class everside_nps(models.Model):
     review_id = models.CharField(max_length=100)
     review = models.CharField(max_length=100)
@@ -19,3 +23,5 @@ class everside_clinic(models.Model):
     clinic = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
+
+
