@@ -171,18 +171,27 @@ def netPromoterScore(request,format=None):
                 promoters_count = promoters_count.filter(clinic__in = clinic)
                 passive_count = passive_count.filter(clinic__in = clinic)
                 detractors_count = detractors_count.filter(clinic__in = clinic)
-
-            promoters = round(len(promoters_count)/len(total_count)*100)
-            if promoters==0:
-                promoters = round(len(promoters_count)/len(total_count)*100,2)
             
-            passive = round(len(passive_count)/len(total_count)*100)
-            if passive==0:
-                passive = round(len(passive_count)/len(total_count)*100,2)
+            if(len(promoters_count)>0):
+                    promoters = round(len(promoters_count)/len(total_count)*100)
+                    if promoters == 0:
+                        promoters = round(len(promoters_count)/len(total_count)*100,2)
+            else:
+                promoters = 0     
 
-            detractors = round(len(detractors_count)/len(total_count)*100)
-            if detractors==0:
-                detractors = round(len(detractors_count)/len(total_count)*100,2)
+            if(len(passive_count)>0):
+                    passive = round(len(passive_count)/len(total_count)*100)
+                    if passive == 0:
+                        passive = round(len(passive_count)/len(total_count)*100,2)
+            else:
+                passive = 0      
+
+            if(len(detractors_count)>0):
+                    detractors = round(len(detractors_count)/len(total_count)*100)
+                    if detractors == 0:
+                        detractors = round(len(detractors_count)/len(total_count)*100,2)
+            else:
+                detractors = 0      
             
             nps ={
                     "nps_score":(promoters-detractors),
@@ -256,17 +265,26 @@ def netSentimentScore(request,format=None):
                 positive_count = positive_count.filter(clinic__in = clinic)
                 negative_count = negative_count.filter(clinic__in = clinic)
                 extreme_count = extreme_count.filter(clinic__in = clinic)
-            positive = round(len(positive_count)/len(total_count)*100)
-            if positive==0:
-                positive = round(len(positive_count)/len(total_count)*100,2)
-
-            negative = round(len(negative_count)/len(total_count)*100)
-            if negative==0:
-                negative = round(len(negative_count)/len(total_count)*100,2)
+            if(len(positive_count)!=0):
+                positive = round(len(positive_count)/len(total_count)*100)
+                if positive == 0:
+                    positive = round(len(positive_count)/len(total_count)*100,2)
+            else:
+                positive = 0
             
-            extreme = round(len(extreme_count)/len(total_count)*100)
-            if extreme==0:
-                extreme = round(len(extreme_count)/len(total_count)*100,2)
+            if(len(negative_count)!=0):
+                negative = round(len(negative_count)/len(total_count)*100)
+                if negative == 0:
+                    negative = round(len(negative_count)/len(total_count)*100,2)
+            else:
+                negative = 0
+            
+            if(len(extreme_count)!=0):
+                extreme = round(len(extreme_count)/len(total_count)*100)
+                if extreme == 0:
+                    extreme = round(len(extreme_count)/len(total_count)*100,2)
+            else:
+                extreme = 0
 
             nss ={
                     "nss_score":(positive-negative-extreme),
