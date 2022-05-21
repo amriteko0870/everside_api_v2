@@ -202,7 +202,7 @@ def netPromoterScore(request,format=None):
                         {
                             "label":"Passives",
                             "percentage":passive,
-                            "color":"#4D5552",
+                            "color":"#939799",
                         },
                         {
                             "label":"Detractors",
@@ -287,7 +287,7 @@ def netSentimentScore(request,format=None):
                     {
                         "label":"Negative",
                         "percentage":negative,
-                        "color":"#f6da09",
+                        "color":"#ffa500",
                     },
                     {
                         "label":"Extreme",
