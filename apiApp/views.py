@@ -46,6 +46,57 @@ from apiApp.prob_func import func
 def filterRegion(request,format=None):
     try:
         if request.method == 'GET':
+            frame = {'AL': 'Alabama',
+                    'AK': 'Alaska',
+                    'AZ': 'Arizona',
+                    'AR': 'Arkansas',
+                    'CA': 'California',
+                    'CO': 'Colorado',
+                    'CT': 'Connecticut',
+                    'DE': 'Delaware',
+                    'FL': 'Florida',
+                    'GA': 'Georgia',
+                    'HI': 'Hawaii',
+                    'ID': 'Idaho',
+                    'IL': 'Illinois',
+                    'IN': 'Indiana',
+                    'IA': 'Iowa',
+                    'KS': 'Kansas',
+                    'KY': 'Kentucky',
+                    'LA': 'Louisiana',
+                    'ME': 'Maine',
+                    'MD': 'Maryland',
+                    'MA': 'Massachusetts',
+                    'MI': 'Michigan',
+                    'MN': 'Minnesota',
+                    'MS': 'Mississippi',
+                    'MO': 'Missouri',
+                    'MT': 'Montana',
+                    'NE': 'Nebraska',
+                    'NV': 'Nevada',
+                    'NH': 'New Hampshire',
+                    'NJ': 'New Jersey',
+                    'NM': 'New Mexico',
+                    'NY': 'New York',
+                    'NC': 'North Carolina',
+                    'ND': 'North Dakota',
+                    'OH': 'Ohio',
+                    'OK': 'Oklahoma',
+                    'OR': 'Oregon',
+                    'PA': 'Pennsylvania',
+                    'RI': 'Rhode Island',
+                    'SC': 'South Carolina',
+                    'SD': 'South Dakota',
+                    'TN': 'Tennessee',
+                    'TX': 'Texas',
+                    'UT': 'Utah',
+                    'VT': 'Vermont',
+                    'VA': 'Virginia',
+                    'WA': 'Washington',
+                    'WV': 'West Virginia',
+                    'WI': 'Wisconsin',
+                    'WY': 'Wyoming'}
+
             start_year = request.GET.get('start_year')
             start_month = request.GET.get('start_month')
             end_year = request.GET.get('end_year')
@@ -58,15 +109,15 @@ def filterRegion(request,format=None):
                 end_date = str('1-')+str(int(end_year)+1)
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400            
             region = []
-            obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('city','state').distinct()
-            # clinic = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('clinic',flat=True).distinct()
-            
+            obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('state',flat=True).distinct().order_by('state')           
             for i in obj:
-                region_name = str(i[0])+','+str(i[1])
+                region_name = {
+                    'code': i,
+                    'name':frame[i],
+                    'full_name':str(i)+','+str(frame[i])
+                              }
+                # region[frame[i]] = region_name
                 region.append(region_name)
-            region.sort()
-            # clinic_list = list(clinic)
-            # clinic_list.sort()
         return Response({'Message':'TRUE','region':region})
     except:
         return Response({'Message':'FALSE'})
@@ -817,6 +868,7 @@ def clinicData(request,format=None):
             end_month = request.GET.get('end_month')
             region = (request.GET.get('region')).split('-')
             clinic = (request.GET.get('clinic')).split('-')
+            print(len(region))
             start_date = str(start_month)+'-'+str(start_year)
             startDate = (time.mktime(datetime.datetime.strptime(start_date,"%m-%Y").timetuple()))
             if int(end_month)<12:
@@ -965,3 +1017,46 @@ def egPercentileMember(request,format=None):
 
     except:
         return Response({'Message':"FALSE"})
+
+
+# def index(request):
+#     df = pd.read_csv('reason_score_new_data.csv')
+#     for i in range(1,df.shape[0]):
+        # review_id = list(df['ID'])[i]
+        # review = list(df['reviews'])[i]
+        # date = list(df['date'])[i]
+        # nps_score = list(df['nps_score'])[i]
+        # clinic = list(df['clinic'])[i]
+        # city = list(df['city'])[i]
+        # state = list(df['state'])[i]
+        # polarity_score = list(df['polarity_score'])[i]
+        # label = list(df['label'])[i]
+        # nps_label = list(df['nps_label'])[i]
+        # timestamp = list(df['timestamp'])[i]
+        # print(review_id)
+        # print(review)
+        # print(date)
+        # print(nps_score)
+        # print(clinic)
+        # print(city)
+        # print(state)
+        # print(polarity_score)
+        # print(label)
+        # print(nps_label)
+        # print(timestamp)
+        
+        # data = everside_nps(review_id = list(df['ID'])[i],
+        #                     review = list(df['reviews'])[i],
+        #                     date = list(df['date'])[i],
+        #                     nps_score = list(df['nps_score'])[i],
+        #                     clinic = list(df['clinic'])[i],
+        #                     city = list(df['city'])[i],
+        #                     state = list(df['state'])[i],
+        #                     polarity_score = list(df['polarity_score'])[i],
+        #                     label = list(df['label'])[i],
+        #                     nps_label = list(df['nps_label'])[i],
+        #                     timestamp = list(df['timestamp'])[i]
+        #                     )
+        # data.save()
+
+    # return HttpResponse(df.shape)

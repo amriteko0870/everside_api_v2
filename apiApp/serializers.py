@@ -1,5 +1,7 @@
+from datetime import datetime
 from rest_framework import serializers
 from apiApp.models import *
+
 
 class everside_nps_serializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -25,8 +27,12 @@ class eversideAlertComments(serializers.HyperlinkedModelSerializer):
                 'id',
                 'review',
                 'label',
-                'date'
+                'timestamp'
                 ]
+    def to_representation(self, data):
+        data = super(eversideAlertComments, self).to_representation(data)
+        data['timestamp'] = dt_object = datetime.fromtimestamp(data.get('timestamp')).strftime('%b,%Y')
+        return data
 
 class eversideComments(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -35,4 +41,9 @@ class eversideComments(serializers.HyperlinkedModelSerializer):
                 'id',
                 'review',
                 'label',
+                'timestamp',
                 ]
+    def to_representation(self, data):
+        data = super(eversideComments, self).to_representation(data)
+        data['timestamp'] = dt_object = datetime.fromtimestamp(data.get('timestamp')).strftime('%b,%Y')
+        return data
