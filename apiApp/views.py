@@ -109,15 +109,17 @@ def filterRegion(request,format=None):
                 end_date = str('1-')+str(int(end_year)+1)
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400            
             region = []
-            obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('state',flat=True).distinct().order_by('state')           
+            obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('city','state').distinct()       
             for i in obj:
-                region_name = {
-                    'code': i,
-                    'name':frame[i],
-                    'full_name':str(i)+','+str(frame[i])
-                              }
+                region_name = str(i[0]+','+str(i[1]))
+                # region_name = {
+                #     'code': i,
+                #     'name':frame[i],
+                #     'full_name':str(i)+','+str(frame[i])
+                #               }
                 # region[frame[i]] = region_name
                 region.append(region_name)
+            region.sort()
         return Response({'Message':'TRUE','region':region})
     except:
         return Response({'Message':'FALSE'})
