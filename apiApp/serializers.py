@@ -47,3 +47,19 @@ class eversideComments(serializers.HyperlinkedModelSerializer):
         data = super(eversideComments, self).to_representation(data)
         data['timestamp'] = dt_object = datetime.fromtimestamp(data.get('timestamp')).strftime('%b,%Y')
         return data
+
+class eversideProviders(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = everside_nps
+        fields = [
+            'provider_name',
+            'provider_type',
+            'provider_category',
+            ]
+class eversideClient(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = everside_nps
+        fields = [
+            "client_name",
+            "parent_client_name"
+            ]

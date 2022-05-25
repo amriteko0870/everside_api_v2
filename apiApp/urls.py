@@ -19,5 +19,8 @@ urlpatterns = [
     path('egPercentileMember',views.egPercentileMember,name='egPercentileMember'),
     path('filterRegion',views.filterRegion,name='filterRegion'),
     path('filterClinic',views.filterClinic,name='filterClinic'),
+    path('providersData',views.providersData,name='providersData'),
+    path('clientData',views.clientData,name='clientData'),
+
 
 ]

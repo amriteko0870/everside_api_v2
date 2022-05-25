@@ -18,6 +18,26 @@ class everside_nps(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     timestamp = models.BigIntegerField()
+    member_id = models.CharField(max_length=100,default='')
+    survey_date = models.CharField(max_length=100,default='')
+    survey_month = models.CharField(max_length=100,default='')
+    survey_year = models.CharField(max_length=100,default='')
+    survey_number = models.CharField(max_length=100,default='')
+    clinic_id = models.CharField(max_length=100,default='')
+    clinic_street = models.CharField(max_length=100,default='')
+    clinic_city = models.CharField(max_length=100,default='')
+    clinic_state = models.CharField(max_length=100,default='')
+    clinic_zip = models.CharField(max_length=100,default='')
+    clinic_type = models.CharField(max_length=100,default='')
+    provider_name = models.CharField(max_length=100,default='')
+    provider_type = models.CharField(max_length=100,default='')
+    provider_category = models.CharField(max_length=100,default='')
+    client_naics = models.CharField(max_length=100,default='')
+    client_id = models.CharField(max_length=100,default='')
+    client_name = models.CharField(max_length=100,default='')
+    parent_client_id = models.CharField(max_length=100,default='')
+    parent_client_name = models.CharField(max_length=100,default='')
+    question_type = models.CharField(max_length=100,default='')
     
 class everside_clinic(models.Model):
     clinic = models.CharField(max_length=100)
@@ -25,3 +45,4 @@ class everside_clinic(models.Model):
     state = models.CharField(max_length=100)
 
 
+ 
