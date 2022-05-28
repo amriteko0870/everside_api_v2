@@ -27,6 +27,7 @@ class eversideAlertComments(serializers.HyperlinkedModelSerializer):
                 'id',
                 'review',
                 'label',
+                'clinic',
                 'timestamp'
                 ]
     def to_representation(self, data):

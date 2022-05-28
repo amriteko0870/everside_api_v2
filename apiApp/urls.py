@@ -21,6 +21,7 @@ urlpatterns = [
     path('filterClinic',views.filterClinic,name='filterClinic'),
     path('providersData',views.providersData,name='providersData'),
     path('clientData',views.clientData,name='clientData'),
+    # path('',views.index,name='index')
 
 
 ]

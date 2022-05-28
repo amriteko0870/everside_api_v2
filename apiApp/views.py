@@ -110,16 +110,10 @@ def filterRegion(request,format=None):
                 end_date = str('1-')+str(int(end_year)+1)
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400            
             region = []
-            obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('state',flat=True).distinct()       
+            obj = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).exclude(state__isnull=True).exclude(state__exact='nan').values_list('state',flat=True).distinct()       
             for i in obj:
-                # region_name = str(i[0]+','+str(i[1]))
-                # region_name = {
-                #     'code': i,
-                #     'name':frame[i],
-                #     'full_name':str(i)+','+str(frame[i])
-                #               }
-                # region[frame[i]] = region_name
                 region.append(str(frame[i])+','+str(i))
+                
             region.sort()
         return Response({'Message':'TRUE','region':region})
     except:
@@ -305,7 +299,7 @@ def netSentimentScore(request,format=None):
             positive_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Positive').values()
             negative_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Negative').values()
             extreme_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').values()
-    
+
             state = region
             if '' not in region:
                 # for i in region:
@@ -321,6 +315,7 @@ def netSentimentScore(request,format=None):
                 positive_count = positive_count.filter(clinic__in = clinic)
                 negative_count = negative_count.filter(clinic__in = clinic)
                 extreme_count = extreme_count.filter(clinic__in = clinic)
+            
             if(len(positive_count)!=0):
                 positive = round(len(positive_count)/len(total_count)*100)
                 if positive == 0:
@@ -570,7 +565,7 @@ def npsVsSentiments(request,format=None):
             extreme_total_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').values()
             extreme_promoters_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').filter(nps_label='Promoter').values()
             extreme_passive_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').filter(nps_label='Passive').values()
-            extreme_detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').filter(nps_label='Detractor').values()
+            extreme_detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme').filter(nps_label = 'Detractor').values()
             state = region
             if '' not in region:
                 # for i in region:
@@ -612,6 +607,7 @@ def npsVsSentiments(request,format=None):
                     'passive':extreme_passive,
                     'detractor':extreme_detractors,
                 }
+            
             #-------------Positive---------------------------------------------------------------
             positive_total_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Positive').values()
             positive_promoters_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Positive').filter(nps_label='Promoter').values()
@@ -940,7 +936,7 @@ def totalCards(request,format=None):
             alerts = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(label='Extreme')
             clinics = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('clinic').distinct()
             doctors = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('provider_name').distinct()
-            clients = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values_list('client_id').distinct()
+            clients = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).exclude(client_name__isnull=True).exclude(client_name__exact='nan').values_list('client_id').distinct()
             # city = []
             state = region
             if '' not in region:
@@ -951,12 +947,16 @@ def totalCards(request,format=None):
                 survey = survey.filter(state__in = state)
                 alerts = alerts.filter(state__in = state)
                 clinics = clinics.filter(state__in = state)
+                doctors = doctors.filter(state__in = state)
+                clients = clients.filter(state__in = state)
 
             if '' not in clinic:
                 comments = comments.filter(clinic__in = clinic)
                 survey = survey.filter(clinic__in = clinic)
                 alerts = alerts.filter(clinic__in = clinic)
                 clinics = clinics.filter(clinic__in = clinic)
+                doctors = doctors.filter(clinic__in = clinic)
+                clients = clients.filter(clinic__in = clinic)
             comments = comments 
             survey = survey
             alerts = alerts
@@ -993,6 +993,11 @@ def providersData(request,format=None):
                 end_date = str('1-')+str(int(end_year)+1)
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400 
             providers = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values('provider_name','provider_type','provider_category').exclude(provider_type__isnull=True).exclude(provider_type__exact='').distinct()
+            state = region
+            if '' not in region:
+                providers = providers.filter(state__in = state)
+            if '' not in clinic:
+                providers = providers.filter(clinic__in = clinic)
             serialized_providers = eversideProviders(providers,many=True)
         return Response({'Message':'TRUE','data':serialized_providers.data})
     except:
@@ -1017,7 +1022,12 @@ def clientData(request,format=None):
             else:
                 end_date = str('1-')+str(int(end_year)+1)
             endDate = (time.mktime(datetime.datetime.strptime(end_date,"%m-%Y").timetuple())) - 86400 
-            client = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).values("client_name","parent_client_name").distinct()
+            client = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).exclude(client_name__isnull=True).exclude(client_name__exact='nan').values("client_name","parent_client_name").distinct()
+            state = region
+            if '' not in region:
+                client = client.filter(state__in = state)
+            if '' not in clinic:
+                client = client.filter(clinic__in = clinic)
             serialized_client = eversideClient(client,many=True)
         return Response({'Message':'TRUE','data':serialized_client.data})
     except:
@@ -1086,21 +1096,25 @@ def egPercentileMember(request,format=None):
         return Response({'Message':"FALSE"})
 
 
-# # def index(request):
+# def index(request):
 #     # everside_nps.objects.all().delete()
-#     df = pd.read_csv('wdw_df.csv')
+# #     everside_nps.objects.filter(nps_label = 'Detractors').update(nps_label = 'Detractor')
+    
+# #     # everside_nps.objects.all().delete()
+#     df = pd.read_csv('final_wdw.csv')
 #     for i in range(df.shape[0]):
+#         a = (time.mktime(datetime.datetime.strptime((list(df['SURVEY_MONTH']))[i],"%b-%y").timetuple()))
 #         # review_id = list(df['ID'])[i]
-#         # review = list(df['REASONNPSSCORE__C'])[i]
-#         # date = list(df['date'])[i]
-#         # nps_score = list(df['nps_score'])[i]
-#         # clinic = list(df['clinic'])[i]
-#         # city = list(df['city'])[i]
-#         # state = list(df['state'])[i]
+#         # review = list(df['reviews'])[i]
+#         # date = list(df['SURVEYDATE__C'])[i]
+#         # nps_score = list(df['NPS'])[i]
+#         # clinic = list(df['NPSCLINIC__C'])[i]
+#         # city = list(df['CLINIC_CITY'])[i]
+#         # state = list(df['CLINIC_STATE'])[i]
 #         # polarity_score = list(df['polarity_score'])[i]
-#         # label = list(df['label'])[i]
+#         # label = list(df['sentiment_label'])[i]
 #         # nps_label = list(df['nps_label'])[i]
-#         # timestamp = list(df['timestamp'])[i]
+#         # timestamp = a
 #         # member_id = list(df['MEMBER_ID'])[i]
 #         # survey_date = list(df['SURVEYDATE__C'])[i]
 #         # survey_month = list(df['SURVEY_MONTH'])[i]
@@ -1153,16 +1167,16 @@ def egPercentileMember(request,format=None):
 #         # print('parent_client_name',parent_client_name)
 #         # print('question_type',question_type)
 #         data = everside_nps(review_id = list(df['ID'])[i],
-#                             review = list(df['WHATDIDNOTWELLWITHAPP__C'])[i],
-#                             date = list(df['date'])[i],
-#                             nps_score = list(df['nps_score'])[i],
-#                             clinic = list(df['clinic'])[i],
-#                             city = list(df['city'])[i],
-#                             state = list(df['state'])[i],
+#                             review = list(df['reviews'])[i],
+#                             date = list(df['SURVEYDATE__C'])[i],
+#                             nps_score = list(df['NPS'])[i],
+#                             clinic = list(df['NPSCLINIC__C'])[i],
+#                             city = list(df['CLINIC_CITY'])[i],
+#                             state = list(df['CLINIC_STATE'])[i],
 #                             polarity_score = list(df['polarity_score'])[i],
-#                             label = list(df['label'])[i],
+#                             label = list(df['sentiment_label'])[i],
 #                             nps_label = list(df['nps_label'])[i],
-#                             timestamp = list(df['timestamp'])[i],
+#                             timestamp = a,
 #                             member_id = list(df['MEMBER_ID'])[i],
 #                             survey_date = list(df['SURVEYDATE__C'])[i],
 #                             survey_month = list(df['SURVEY_MONTH'])[i],
@@ -1182,10 +1196,8 @@ def egPercentileMember(request,format=None):
 #                             client_name = list(df['CLIENT NAME'])[i],
 #                             parent_client_id = list(df['PARENT_CLIENT_ID'])[i],
 #                             parent_client_name = list(df['PARENT CLIENT NAME'])[i],
-#                             question_type = list(df['question_type'])[i]
+#                             question_type = list(df['question_type'])[i],
 #                             )
 #         data.save()
 #         print(i)
-#         # break
-
 #     return HttpResponse('Hello')
