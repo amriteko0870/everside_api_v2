@@ -399,6 +399,8 @@ def npsOverTime(request,format=None):
                 passive_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(nps_label = 'Passive').values()
                 detractors_count = everside_nps.objects.filter(timestamp__gte=startDate).filter(timestamp__lte=endDate).filter(nps_label = 'Detractor').values()
                 state = region
+                print(start_date,end_date)
+                print(total_count,promoters_count,passive_count,detractors_count)
                 if '' not in region:
                     # for i in region:
                     #     city.append(i.split(',')[0])
